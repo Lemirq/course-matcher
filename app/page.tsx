@@ -6,6 +6,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Upload, Users, Search, ThumbsUp } from "lucide-react";
+import {
+  Select,
+  SelectLabel,
+  SelectContent,
+  SelectGroup,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -91,6 +100,28 @@ export default function Home() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="year">Year of study</Label>
+              <Select
+                value={year}
+                onValueChange={(value) => setYear(value)}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a year" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Year of study</SelectLabel>
+                    <SelectItem value="first">First</SelectItem>
+                    <SelectItem value="second">Second</SelectItem>
+                    <SelectItem value="third">Third</SelectItem>
+                    <SelectItem value="fourth">Fourth</SelectItem>
+                    <SelectItem value="fifth">Fifth</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label>ICS file</Label>
               <Input
                 type="file"
@@ -112,6 +143,14 @@ export default function Home() {
               {loading ? "Uploading..." : "Upload calendar"}
             </Button>
             {message && <p className="text-sm">{message}</p>}
+            {message?.startsWith("Uploaded") && (
+              <Button variant="outline" asChild>
+                <a href={`/matches?email=${email}`}>
+                  <Search className="h-4 w-4 mr-2" />
+                  Find matches
+                </a>
+              </Button>
+            )}
           </form>
         </div>
 

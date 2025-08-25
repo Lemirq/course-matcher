@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-type Student = { id: string; name: string; email: string };
+type Student = { id: string; name: string; email: string; year: string };
 
 export default function StudentsPage() {
   const [q, setQ] = useState("");
@@ -56,6 +56,7 @@ export default function StudentsPage() {
           <li key={s.id} className="border rounded p-3">
             <div className="font-medium">{s.name}</div>
             <div className="text-sm text-gray-600">{s.email}</div>
+            <div className="text-sm text-gray-600">{s.year}</div>
           </li>
         ))}
       </ul>

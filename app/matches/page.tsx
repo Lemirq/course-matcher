@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSearchParams } from "next/navigation";
 
 type Match = {
-  student: { id: string; name: string; email: string };
+  student: { id: string; name: string; email: string; year: string };
   sharedCourses: string[];
 };
 
@@ -25,13 +26,21 @@ type CourseDetail = {
 };
 
 export default function MatchesPage() {
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const [query, setQuery] = useState(email || "");
   const [matches, setMatches] = useState<Match[]>([]);
   const [selected, setSelected] = useState<Match | null>(null);
   const [details, setDetails] = useState<CourseDetail[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (email) {
+      setQuery(email);
+    }
+  }, [email]);
 
   async function search() {
     if (!query) return;
@@ -114,6 +123,9 @@ export default function MatchesPage() {
                 <div className="font-medium">{m.student.name}</div>
                 <div className="text-xs text-muted-foreground">
                   {m.student.email}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {m.student.year}
                 </div>
                 <div className="text-xs mt-1">
                   Shared: {m.sharedCourses.join(", ")}
