@@ -11,6 +11,7 @@ export async function GET(req: NextRequest) {
       1,
       Number.parseInt(searchParams.get("minSize") || "2", 10) || 2
     );
+    const campusFilter = (searchParams.get("campus") || "").trim();
 
     const supabase = getSupabase();
 
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("events")
       .select(
-        "summary, location, start_time, end_time, student_id, students:student_id(id,name,email,year)"
+        "summary, location, start_time, end_time, student_id, students:student_id(id,name,email,year,campus)"
       );
     if (error) throw error;
 
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
         name: string;
         email: string;
         year: string;
+        campus: string;
       } | null;
     };
 
@@ -70,7 +72,8 @@ export async function GET(req: NextRequest) {
       const location = raw.location ?? null;
       const key = `${courseCode}|${start}|${end}|${location ?? ""}`;
       const student = raw.students;
-      if (!student) continue;
+      if (!student || (campusFilter && student.campus !== campusFilter))
+        continue;
 
       if (!groups.has(key)) {
         groups.set(key, {
@@ -87,7 +90,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    let classes = Array.from(groups.values())
+    const classes = Array.from(groups.values())
       .map((g) => ({ ...g, size: g.students.length }))
       .filter((g) => g.size >= minSize)
       .sort((a, b) => {

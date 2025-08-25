@@ -27,6 +27,7 @@ export default function ClassesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [campus, setCampus] = useState("");
   function weekday(date: string) {
     const day = new Date(date).getDay();
     return [
@@ -55,6 +56,7 @@ export default function ClassesPage() {
       const params = new URLSearchParams();
       if (course) params.set("course", course);
       if (minSize) params.set("minSize", minSize);
+      if (campus) params.set("campus", campus);
       const res = await fetch(`/api/classes?${params.toString()}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch");
@@ -112,6 +114,17 @@ export default function ClassesPage() {
             <SelectItem value="3">3+</SelectItem>
             <SelectItem value="4">4+</SelectItem>
             <SelectItem value="5">5+</SelectItem>
+          </SelectContent>
+        </Select>
+        {/* campus filter */}
+        <Select value={campus} onValueChange={(v) => setCampus(v)}>
+          <SelectTrigger className="min-w-44">
+            <SelectValue placeholder="Campus" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="UTM">UTM</SelectItem>
+            <SelectItem value="UTSG">UTSG</SelectItem>
+            <SelectItem value="UTSC">UTSC</SelectItem>
           </SelectContent>
         </Select>
         <Button onClick={fetchClasses} disabled={loading}>
