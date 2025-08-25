@@ -1,103 +1,170 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { Upload, Users, Search, ThumbsUp } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [ics, setIcs] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, ics }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Upload failed");
+      setMessage(
+        `Uploaded. Parsed ${json.courses} courses and ${json.events} events.`
+      );
+    } catch (err: unknown) {
+      setMessage(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFile(file: File | null) {
+    if (!file) return;
+    const text = await file.text();
+    setIcs(text);
+  }
+
+  return (
+    <div className="font-sans max-w-3xl mx-auto p-8 flex flex-col gap-8">
+      <header className="flex items-center justify-between">
+        <h1 className="text-3xl font-semibold">Course Matcher</h1>
+        <nav className="flex gap-2">
+          <Link href="/students">
+            <Button variant="outline">
+              <Users className="h-4 w-4 mr-2" />
+              Students
+            </Button>
+          </Link>
+          <Link href="/matches">
+            <Button variant="outline">
+              <Search className="h-4 w-4 mr-2" />
+              Matches
+            </Button>
+          </Link>
+        </nav>
+      </header>
+
+      <section className="grid md:grid-cols-2 gap-6">
+        <div className="rounded-lg border p-6 space-y-4">
+          <h2 className="text-xl font-medium flex items-center">
+            <Upload className="h-5 w-5 mr-2" /> Upload your calendar
+          </h2>
+          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            <div className="grid gap-2">
+              <Label htmlFor="name">Student name</Label>
+              <Input
+                id="name"
+                placeholder="e.g., Jane Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Student email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="e.g., jane@mail.utoronto.ca"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label>ICS file</Label>
+              <Input
+                type="file"
+                accept=".ics,text/calendar"
+                onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+              />
+              <Textarea
+                rows={10}
+                className="max-h-60"
+                placeholder="Or paste ICS content here"
+                value={ics}
+                onChange={(e) => setIcs(e.target.value)}
+              />
+            </div>
+            <div className="text-xs text-gray-600">
+              Entries are unique by email and cannot be updated yet.
+            </div>
+            <Button disabled={loading} type="submit">
+              {loading ? "Uploading..." : "Upload calendar"}
+            </Button>
+            {message && <p className="text-sm">{message}</p>}
+          </form>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <div className="rounded-lg border p-6 space-y-3">
+          <h2 className="text-xl font-medium">
+            How to get your ICS from Acorn
+          </h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm">
+            <li>
+              Go to{" "}
+              <a
+                className="underline"
+                href="https://acorn.utoronto.ca/sws/#/timetable-and-exams"
+                target="_blank"
+                rel="noreferrer"
+              >
+                acorn.utoronto.ca
+              </a>
+            </li>
+            <li>Open Timetable & Exams.</li>
+            <li>
+              Click &quot;Download Calendar Export&quot; to download a .ics
+              file.
+            </li>
+            <li>Return here and upload that file (or paste its contents).</li>
+          </ol>
+          <div className="pt-2">
+            <Button variant="outline" asChild>
+              <a href="/matches">
+                <Search className="h-4 w-4 mr-2" />
+                Find matches
+              </a>
+            </Button>
+          </div>
+          <div className="pt-4">
+            <span className="text-sm">Want updates allowed? </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await fetch("/api/feature?key=allow-updates", {
+                    method: "POST",
+                  });
+                  setMessage("Thanks for the vote!");
+                } catch {}
+              }}
+            >
+              <ThumbsUp className="h-4 w-4 mr-2" />
+              Upvote feature
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
