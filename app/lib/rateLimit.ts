@@ -52,7 +52,8 @@ export async function enforceRateLimit(
   }
 
   if ((existing.count as number) >= limit) {
-    const err: any = new Error("Rate limit exceeded. Please try again later.");
+    const err = new Error("Rate limit exceeded. Please try again later.");
+    // @ts-expect-error - this is a hack to add a status property to the error
     err.status = 429;
     throw err;
   }
