@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSupabase } from "@/app/lib/supabase";
 import { parseIcs } from "@/app/lib/ics";
+import { enforceRateLimit } from "@/app/lib/rateLimit";
 
 const schema = z.object({
   name: z.string().min(1),
@@ -11,6 +12,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    await enforceRateLimit(req, "upload", 60, 5);
     const body = await req.json();
     const { name, email, ics } = schema.parse(body);
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/app/lib/supabase";
+import { enforceRateLimit } from "@/app/lib/rateLimit";
 
 // GET /api/feature?key=allow-updates -> { count }
 // POST /api/feature?key=allow-updates -> increments count
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    await enforceRateLimit(req, "feature", 60, 20);
     const { searchParams } = new URL(req.url);
     const key = searchParams.get("key") ?? "allow-updates";
     const supabase = getSupabase();

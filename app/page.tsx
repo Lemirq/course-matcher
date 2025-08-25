@@ -11,6 +11,7 @@ export default function Home() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [ics, setIcs] = useState<string>("");
+  const [year, setYear] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -22,7 +23,7 @@ export default function Home() {
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, ics }),
+        body: JSON.stringify({ name, email, ics, year }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Upload failed");
@@ -45,7 +46,7 @@ export default function Home() {
   return (
     <div className="font-sans max-w-3xl mx-auto p-8 flex flex-col gap-8">
       <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold">Course Matcher</h1>
+        <h1 className="text-3xl font-semibold">UofT Course Matcher</h1>
         <nav className="flex gap-2">
           <Link href="/students">
             <Button variant="outline">
