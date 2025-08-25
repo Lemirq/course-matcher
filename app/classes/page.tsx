@@ -23,9 +23,10 @@ export default function ClassesPage() {
   const [course, setCourse] = useState("");
   const [minSize, setMinSize] = useState("2");
   const [classes, setClasses] = useState<ClassGroup[]>([]);
+  const [filteredClasses, setFilteredClasses] = useState<ClassGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [filter, setFilter] = useState("");
   function weekday(date: string) {
     const day = new Date(date).getDay();
     return [
@@ -58,6 +59,7 @@ export default function ClassesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch");
       setClasses(json.classes || []);
+      setFilteredClasses(json.classes || []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to fetch");
       setClasses([]);
@@ -76,6 +78,20 @@ export default function ClassesPage() {
     for (const g of classes) for (const s of g.students) ids.add(s.id);
     return ids.size;
   }, [classes]);
+
+  function handleFilterChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFilter(e.target.value);
+    // only to search already fetched classes
+    const filteredClasses = classes.filter((g) => {
+      return (
+        g.course_code.includes(filter) ||
+        g.students.some(
+          (s) => s.name.includes(filter) || s.email.includes(filter)
+        )
+      );
+    });
+    setFilteredClasses(filteredClasses);
+  }
 
   return (
     <div className="max-w-5xl mx-auto p-6 font-sans space-y-4">
@@ -107,8 +123,17 @@ export default function ClassesPage() {
         Showing {classes.length} classes • {totalStudents} unique students
       </div>
 
+      {/* further filter, go through class code, people, people's email, basically everything */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Filter by anthing..."
+          value={filter}
+          onChange={handleFilterChange}
+        />
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4">
-        {classes.map((g, idx) => (
+        {filteredClasses.map((g, idx) => (
           <div
             key={`${g.course_code}-${g.start_time}-${g.end_time}-${g.location ?? ""}-${idx}`}
             className="border rounded p-4"
