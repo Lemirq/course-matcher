@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { prettifyYear } from "../utils/prettifyYear";
 
 type Student = { id: string; name: string; email: string; year: string };
 
@@ -55,8 +56,8 @@ export default function StudentsPage() {
         {students.map((s) => (
           <li key={s.id} className="border rounded p-3">
             <div className="font-medium">{s.name}</div>
-            <div className="text-sm text-gray-600">{s.email}</div>
-            <div className="text-sm text-gray-600">{s.year}</div>
+            <div className="text-sm text-gray-400">{s.email}</div>
+            <div className="text-sm text-gray-400">{prettifyYear(s.year)}</div>
           </li>
         ))}
       </ul>

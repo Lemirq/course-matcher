@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +15,7 @@ import {
   SelectValue,
   SelectItem,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 export default function Home() {
   const [name, setName] = useState("");
@@ -23,6 +24,7 @@ export default function Home() {
   const [year, setYear] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showBanner, setShowBanner] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -52,6 +54,15 @@ export default function Home() {
     setIcs(text);
   }
 
+  useEffect(() => {
+    const voted = localStorage.getItem("voted");
+    if (voted) {
+      setShowBanner(false);
+    } else {
+      setShowBanner(true);
+    }
+  }, []);
+
   return (
     <div className="font-sans max-w-3xl mx-auto p-8 flex flex-col gap-8">
       <header className="flex items-center justify-between">
@@ -72,7 +83,91 @@ export default function Home() {
         </nav>
       </header>
 
+      {showBanner && (
+        <div className="rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20 flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <span className="font-medium">Should I add social links?</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await fetch("/api/feature?key=social-links", {
+                    method: "POST",
+                  });
+                  toast.success("Thanks for the vote!");
+                  setShowBanner(false);
+                  // store that they voted in local storage
+                  localStorage.setItem("voted", "true");
+                } catch {}
+              }}
+            >
+              <ThumbsUp className="h-4 w-4 mr-2" /> Upvote
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowBanner(false)}
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      )}
+
       <section className="grid md:grid-cols-2 gap-6">
+        <div className="rounded-lg border p-6 space-y-3">
+          <h2 className="text-xl font-medium">
+            How to get your ICS from Acorn
+          </h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm">
+            <li>
+              Go to{" "}
+              <a
+                className="underline"
+                href="https://acorn.utoronto.ca/sws/#/timetable-and-exams"
+                target="_blank"
+                rel="noreferrer"
+              >
+                acorn.utoronto.ca
+              </a>
+            </li>
+            <li>Open Timetable & Exams.</li>
+            <li>
+              Click &quot;Download Calendar Export&quot; to download a .ics
+              file.
+            </li>
+            <li>Return here and upload that file (or paste its contents).</li>
+          </ol>
+          <div className="pt-2">
+            <Button variant="outline" asChild>
+              <a href="/matches">
+                <Search className="h-4 w-4 mr-2" />
+                Find matches
+              </a>
+            </Button>
+          </div>
+          {/* <div className="pt-4">
+            <span className="text-sm">Want updates allowed? </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await fetch("/api/feature?key=allow-updates", {
+                    method: "POST",
+                  });
+                  setMessage("Thanks for the vote!");
+                } catch {}
+              }}
+            >
+              <ThumbsUp className="h-4 w-4 mr-2" />
+              Upvote feature
+            </Button>
+          </div> */}
+        </div>
         <div className="rounded-lg border p-6 space-y-4">
           <h2 className="text-xl font-medium flex items-center">
             <Upload className="h-5 w-5 mr-2" /> Upload your calendar
@@ -152,57 +247,6 @@ export default function Home() {
               </Button>
             )}
           </form>
-        </div>
-
-        <div className="rounded-lg border p-6 space-y-3">
-          <h2 className="text-xl font-medium">
-            How to get your ICS from Acorn
-          </h2>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>
-              Go to{" "}
-              <a
-                className="underline"
-                href="https://acorn.utoronto.ca/sws/#/timetable-and-exams"
-                target="_blank"
-                rel="noreferrer"
-              >
-                acorn.utoronto.ca
-              </a>
-            </li>
-            <li>Open Timetable & Exams.</li>
-            <li>
-              Click &quot;Download Calendar Export&quot; to download a .ics
-              file.
-            </li>
-            <li>Return here and upload that file (or paste its contents).</li>
-          </ol>
-          <div className="pt-2">
-            <Button variant="outline" asChild>
-              <a href="/matches">
-                <Search className="h-4 w-4 mr-2" />
-                Find matches
-              </a>
-            </Button>
-          </div>
-          <div className="pt-4">
-            <span className="text-sm">Want updates allowed? </span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={async () => {
-                try {
-                  await fetch("/api/feature?key=allow-updates", {
-                    method: "POST",
-                  });
-                  setMessage("Thanks for the vote!");
-                } catch {}
-              }}
-            >
-              <ThumbsUp className="h-4 w-4 mr-2" />
-              Upvote feature
-            </Button>
-          </div>
         </div>
       </section>
     </div>

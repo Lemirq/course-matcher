@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
+import { prettifyYear } from "../utils/prettifyYear";
 
 type Match = {
   student: { id: string; name: string; email: string; year: string };
@@ -103,12 +104,47 @@ function MatchesPage({ email }: { email?: string | null }) {
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch detail");
-      setDetails(json.sharedCourses || []);
+      const raw: CourseDetail[] = json.sharedCourses || [];
+      const sorted: CourseDetail[] = raw.map((d) => ({
+        ...d,
+        myEvents: sortEvents(d.myEvents),
+        otherEvents: sortEvents(d.otherEvents),
+      }));
+      setDetails(sorted);
     } catch {
       setDetails([]);
     } finally {
       setLoadingDetail(false);
     }
+  }
+
+  function hasClassOverlap(detail: CourseDetail): boolean {
+    const myKeys = new Set(
+      detail.myEvents.map((e) => `${e.start_time}|${e.end_time}`)
+    );
+    for (const e of detail.otherEvents) {
+      const key = `${e.start_time}|${e.end_time}`;
+      if (myKeys.has(key)) return true;
+    }
+    return false;
+  }
+
+  function weekdayOrder(date: string): number {
+    const d = new Date(date).getDay();
+    return d === 0 ? 7 : d; // Monday=1 ... Friday=5, Saturday=6, Sunday=7
+  }
+
+  function sortEvents<T extends { start_time: string; end_time: string }>(
+    events: T[]
+  ): T[] {
+    return [...events].sort((a, b) => {
+      const da = weekdayOrder(a.start_time);
+      const db = weekdayOrder(b.start_time);
+      if (da !== db) return da - db;
+      return (
+        new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
+      );
+    });
   }
 
   return (
@@ -152,7 +188,7 @@ function MatchesPage({ email }: { email?: string | null }) {
                   {m.student.email}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {m.student.year}
+                  {prettifyYear(m.student.year)}
                 </div>
                 <div className="text-xs mt-1">
                   Shared: {m.sharedCourses.join(", ")}
@@ -186,37 +222,49 @@ function MatchesPage({ email }: { email?: string | null }) {
               )}
               {!loadingDetail && details.length > 0 && (
                 <div className="space-y-3">
-                  {details.map((d) => (
-                    <div key={d.course_code} className="border rounded p-3">
-                      <div className="font-medium mb-2">{d.course_code}</div>
-                      <div className="grid md:grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <div className="font-medium">Your times</div>
-                          <ul className="mt-1 space-y-1">
-                            {d.myEvents.map((e, i) => (
-                              <li key={i}>
-                                {resolveDay(e.start_time)} -{" "}
-                                {new Date(e.end_time).toLocaleTimeString()}{" "}
-                                {e.location ? `@ ${e.location}` : ""}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <div className="font-medium">Their times</div>
-                          <ul className="mt-1 space-y-1">
-                            {d.otherEvents.map((e, i) => (
-                              <li key={i}>
-                                {resolveDay(e.start_time)} -{" "}
-                                {new Date(e.end_time).toLocaleTimeString()}{" "}
-                                {e.location ? `@ ${e.location}` : ""}
-                              </li>
-                            ))}
-                          </ul>
+                  {details.map((d) => {
+                    const overlap = hasClassOverlap(d);
+                    const bgClass =
+                      mode === "courses"
+                        ? overlap
+                          ? "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-900"
+                          : "bg-red-50 border-red-200 dark:bg-red-950/30 dark:border-red-900"
+                        : "bg-green-50 border-green-200 dark:bg-green-950/30 dark:border-green-900";
+                    return (
+                      <div
+                        key={d.course_code}
+                        className={`border rounded p-3 ${bgClass}`}
+                      >
+                        <div className="font-medium mb-2">{d.course_code}</div>
+                        <div className="grid md:grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <div className="font-medium">Your times</div>
+                            <ul className="mt-1 space-y-1">
+                              {d.myEvents.map((e, i) => (
+                                <li key={i}>
+                                  {resolveDay(e.start_time)} -{" "}
+                                  {new Date(e.end_time).toLocaleTimeString()}{" "}
+                                  {e.location ? `@ ${e.location}` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <div className="font-medium">Their times</div>
+                            <ul className="mt-1 space-y-1">
+                              {d.otherEvents.map((e, i) => (
+                                <li key={i}>
+                                  {resolveDay(e.start_time)} -{" "}
+                                  {new Date(e.end_time).toLocaleTimeString()}{" "}
+                                  {e.location ? `@ ${e.location}` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

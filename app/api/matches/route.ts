@@ -51,11 +51,11 @@ export async function GET(req: NextRequest) {
         .eq("student_id", studentId);
       if (myEventsErr) throw myEventsErr;
       for (const e of myEvents ?? []) {
-        const summary = String((e as any).summary ?? "");
+        const summary = String((e as { summary: string }).summary ?? "");
         const code = Array.from(myCodeSet).find((c) => summary.includes(c));
         if (!code) continue;
-        const start = String((e as any).start_time ?? "");
-        const end = String((e as any).end_time ?? "");
+        const start = String((e as { start_time: string }).start_time ?? "");
+        const end = String((e as { end_time: string }).end_time ?? "");
         if (!start || !end) continue;
         myClassKeySet.add(`${code}|${start}|${end}`);
       }
@@ -64,7 +64,9 @@ export async function GET(req: NextRequest) {
     // Students with overlapping course codes (excluding the student)
     const { data: matches, error: matchesErr } = await supabase
       .from("student_courses")
-      .select("student_id, course_code, students:student_id(id,name,email)")
+      .select(
+        "student_id, course_code, students:student_id(id,name,email,year)"
+      )
       .in("course_code", codes)
       .neq("student_id", studentId);
     if (matchesErr) throw matchesErr;
@@ -73,7 +75,7 @@ export async function GET(req: NextRequest) {
     const agg = new Map<
       string,
       {
-        student: { id: string; name: string; email: string };
+        student: { id: string; name: string; email: string; year: string };
         sharedCourses: string[];
       }
     >();
@@ -98,6 +100,7 @@ export async function GET(req: NextRequest) {
         id?: unknown;
         name?: unknown;
         email?: unknown;
+        year?: unknown;
       } | null;
       if (!student) continue;
       const s = {
@@ -113,6 +116,10 @@ export async function GET(req: NextRequest) {
           typeof student.email === "string"
             ? student.email
             : String(student.email ?? ""),
+        year:
+          typeof student.year === "string"
+            ? student.year
+            : String(student.year ?? ""),
       };
       if (!s.id) continue;
       if (!agg.has(sid)) agg.set(sid, { student: s, sharedCourses: [] });
@@ -137,11 +144,11 @@ export async function GET(req: NextRequest) {
         if (otherErr) continue;
         const overlapCodes = new Set<string>();
         for (const e of otherEvents ?? []) {
-          const summary = String((e as any).summary ?? "");
+          const summary = String((e as { summary: string }).summary ?? "");
           const code = Array.from(myCodeSet).find((c) => summary.includes(c));
           if (!code) continue;
-          const start = String((e as any).start_time ?? "");
-          const end = String((e as any).end_time ?? "");
+          const start = String((e as { start_time: string }).start_time ?? "");
+          const end = String((e as { end_time: string }).end_time ?? "");
           const key = `${code}|${start}|${end}`;
           if (myClassKeySet.has(key)) overlapCodes.add(code);
         }
@@ -160,6 +167,8 @@ export async function GET(req: NextRequest) {
       student: r.student,
       sharedCourses: r.sharedCourses,
     }));
+
+    console.log("finalResult", finalResult);
 
     return NextResponse.json({ ok: true, matches: finalResult });
   } catch (err: unknown) {
