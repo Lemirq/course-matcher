@@ -80,6 +80,9 @@ export default function Home() {
               Matches
             </Button>
           </Link>
+          <Link href="/classes">
+            <Button variant="outline">Classes</Button>
+          </Link>
         </nav>
       </header>
 
