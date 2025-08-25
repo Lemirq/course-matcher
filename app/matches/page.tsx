@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSearchParams } from "next/navigation";
@@ -25,9 +25,16 @@ type CourseDetail = {
   }[];
 };
 
-export default function MatchesPage() {
+// Component that handles search params (must be wrapped in Suspense)
+function MatchesPageContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+
+  return <MatchesPage email={email} />;
+}
+
+// Main component that receives email as a prop
+function MatchesPage({ email }: { email?: string | null }) {
   const [query, setQuery] = useState(email || "");
   const [matches, setMatches] = useState<Match[]>([]);
   const [selected, setSelected] = useState<Match | null>(null);
@@ -89,7 +96,7 @@ export default function MatchesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch detail");
       setDetails(json.sharedCourses || []);
-    } catch (e) {
+    } catch {
       setDetails([]);
     } finally {
       setLoadingDetail(false);
@@ -197,5 +204,18 @@ export default function MatchesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Default export with Suspense boundary
+export default function MatchesPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-5xl mx-auto p-6 font-sans">Loading...</div>
+      }
+    >
+      <MatchesPageContent />
+    </Suspense>
   );
 }
