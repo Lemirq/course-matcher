@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const meEmail = searchParams.get("meEmail");
     const otherId = searchParams.get("otherId");
+    const mode = (searchParams.get("mode") || "courses").toLowerCase();
     if (!meEmail || !otherId)
       return NextResponse.json(
         { ok: false, error: "meEmail and otherId required" },
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
       .select("summary, location, start_time, end_time")
       .eq("student_id", otherId);
 
-    const courseMap = shared.map((code) => {
+    let courseMap = shared.map((code) => {
       const mine = (myEvents ?? []).filter((e) =>
         (e.summary as string).includes(code)
       );
@@ -69,6 +70,33 @@ export async function GET(req: NextRequest) {
         otherEvents: theirs,
       };
     });
+
+    if (mode === "classes") {
+      // Keep only exact overlapping class times within each course
+      courseMap = courseMap
+        .map((c) => {
+          const myKeys = new Set(
+            c.myEvents.map((e) => `${e.start_time}|${e.end_time}`)
+          );
+          const otherKeys = new Set(
+            c.otherEvents.map((e) => `${e.start_time}|${e.end_time}`)
+          );
+          const overlapKeys = new Set<string>();
+          for (const k of myKeys) if (otherKeys.has(k)) overlapKeys.add(k);
+          const myOverlap = c.myEvents.filter((e) =>
+            overlapKeys.has(`${e.start_time}|${e.end_time}`)
+          );
+          const theirOverlap = c.otherEvents.filter((e) =>
+            overlapKeys.has(`${e.start_time}|${e.end_time}`)
+          );
+          return {
+            course_code: c.course_code,
+            myEvents: myOverlap,
+            otherEvents: theirOverlap,
+          };
+        })
+        .filter((c) => c.myEvents.length > 0 && c.otherEvents.length > 0);
+    }
 
     return NextResponse.json({ ok: true, sharedCourses: courseMap });
   } catch (err: unknown) {

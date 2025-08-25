@@ -2,6 +2,13 @@
 import { useEffect, useState, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
 
 type Match = {
@@ -42,6 +49,7 @@ function MatchesPage({ email }: { email?: string | null }) {
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"courses" | "classes">("courses");
 
   useEffect(() => {
     if (email) {
@@ -55,7 +63,7 @@ function MatchesPage({ email }: { email?: string | null }) {
     setError(null);
     try {
       const res = await fetch(
-        `/api/matches?email=${encodeURIComponent(query)}`
+        `/api/matches?email=${encodeURIComponent(query)}&mode=${mode}`
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch");
@@ -91,7 +99,7 @@ function MatchesPage({ email }: { email?: string | null }) {
     setLoadingDetail(true);
     try {
       const res = await fetch(
-        `/api/match-detail?meEmail=${encodeURIComponent(query)}&otherId=${encodeURIComponent(m.student.id)}`
+        `/api/match-detail?meEmail=${encodeURIComponent(query)}&otherId=${encodeURIComponent(m.student.id)}&mode=${mode}`
       );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to fetch detail");
@@ -106,12 +114,24 @@ function MatchesPage({ email }: { email?: string | null }) {
   return (
     <div className="max-w-5xl mx-auto p-6 font-sans">
       <h1 className="text-2xl font-semibold mb-4">Find Matches</h1>
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 items-center">
         <Input
           placeholder="Enter your email"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <Select
+          value={mode}
+          onValueChange={(v: "courses" | "classes") => setMode(v)}
+        >
+          <SelectTrigger className="min-w-44">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="courses">Exact courses</SelectItem>
+            <SelectItem value="classes">Exact classes</SelectItem>
+          </SelectContent>
+        </Select>
         <Button onClick={search} disabled={loading}>
           {loading ? "Searching..." : "Search"}
         </Button>

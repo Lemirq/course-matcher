@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
     const id = searchParams.get("id");
+    const mode = (searchParams.get("mode") || "courses").toLowerCase();
     if (!email && !id) {
       return NextResponse.json(
         { ok: false, error: "Provide email or id" },
@@ -38,6 +39,27 @@ export async function GET(req: NextRequest) {
       (r: { course_code: string }) => r.course_code
     );
     if (codes.length === 0) return NextResponse.json({ ok: true, matches: [] });
+
+    // For exact classes mode, precompute keys of my class meeting times
+    // Key format: `${course_code}|${start_time}|${end_time}`
+    const myCodeSet = new Set<string>(codes);
+    const myClassKeySet = new Set<string>();
+    if (mode === "classes") {
+      const { data: myEvents, error: myEventsErr } = await supabase
+        .from("events")
+        .select("summary, start_time, end_time")
+        .eq("student_id", studentId);
+      if (myEventsErr) throw myEventsErr;
+      for (const e of myEvents ?? []) {
+        const summary = String((e as any).summary ?? "");
+        const code = Array.from(myCodeSet).find((c) => summary.includes(c));
+        if (!code) continue;
+        const start = String((e as any).start_time ?? "");
+        const end = String((e as any).end_time ?? "");
+        if (!start || !end) continue;
+        myClassKeySet.add(`${code}|${start}|${end}`);
+      }
+    }
 
     // Students with overlapping course codes (excluding the student)
     const { data: matches, error: matchesErr } = await supabase
@@ -97,12 +119,49 @@ export async function GET(req: NextRequest) {
       agg.get(sid)!.sharedCourses.push(course);
     }
 
-    const result = Array.from(agg.values()).map((r) => ({
+    let result = Array.from(agg.entries()).map(([sid, r]) => ({
+      sid,
       student: r.student,
       sharedCourses: Array.from(new Set(r.sharedCourses)).sort(),
     }));
 
-    return NextResponse.json({ ok: true, matches: result });
+    if (mode === "classes") {
+      // Filter to only students who share at least one exact class meeting time
+      const filtered: typeof result = [];
+      for (const entry of result) {
+        // Fetch their events
+        const { data: otherEvents, error: otherErr } = await supabase
+          .from("events")
+          .select("summary, start_time, end_time")
+          .eq("student_id", entry.sid);
+        if (otherErr) continue;
+        const overlapCodes = new Set<string>();
+        for (const e of otherEvents ?? []) {
+          const summary = String((e as any).summary ?? "");
+          const code = Array.from(myCodeSet).find((c) => summary.includes(c));
+          if (!code) continue;
+          const start = String((e as any).start_time ?? "");
+          const end = String((e as any).end_time ?? "");
+          const key = `${code}|${start}|${end}`;
+          if (myClassKeySet.has(key)) overlapCodes.add(code);
+        }
+        if (overlapCodes.size > 0) {
+          filtered.push({
+            ...entry,
+            sharedCourses: Array.from(overlapCodes).sort(),
+          });
+        }
+      }
+      result = filtered;
+    }
+
+    // Strip sid before returning
+    const finalResult = result.map((r) => ({
+      student: r.student,
+      sharedCourses: r.sharedCourses,
+    }));
+
+    return NextResponse.json({ ok: true, matches: finalResult });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ ok: false, error: message }, { status: 400 });
