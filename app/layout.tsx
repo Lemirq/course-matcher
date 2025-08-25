@@ -70,9 +70,6 @@ export default function RootLayout({
                   UofT Course Matcher
                 </Link>
                 <nav className="flex items-center gap-3 text-sm">
-                  <Link href="/" className="underline-offset-4 hover:underline">
-                    Home
-                  </Link>
                   <Link
                     href="/students"
                     className="underline-offset-4 hover:underline"
@@ -84,6 +81,12 @@ export default function RootLayout({
                     className="underline-offset-4 hover:underline"
                   >
                     Matches
+                  </Link>
+                  <Link
+                    href="/classes"
+                    className="underline-offset-4 hover:underline"
+                  >
+                    Classes
                   </Link>
                   <ModeToggle />
                 </nav>

@@ -8,6 +8,7 @@ const schema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
   year: z.enum(["first", "second", "third", "fourth", "fifth"]),
+  campus: z.enum(["UTM", "UTSG", "UTSC"]),
   ics: z.string().min(10),
 });
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     await enforceRateLimit(req, "upload", 60, 5);
     const body = await req.json();
-    const { name, email, year, ics } = schema.parse(body);
+    const { name, email, year, campus, ics } = schema.parse(body);
 
     const parsed = await parseIcs(ics);
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Insert student
     const { data: studentData, error: studentErr } = await supabase
       .from("students")
-      .insert({ name, email, year })
+      .insert({ name, email, year, campus })
       .select()
       .single();
     if (studentErr) throw studentErr;

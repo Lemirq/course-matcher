@@ -22,6 +22,7 @@ export default function Home() {
   const [email, setEmail] = useState("");
   const [ics, setIcs] = useState<string>("");
   const [year, setYear] = useState<string>("");
+  const [campus, setCampus] = useState<string>("UTM");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(false);
@@ -34,7 +35,7 @@ export default function Home() {
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, ics, year }),
+        body: JSON.stringify({ name, email, ics, year, campus }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Upload failed");
@@ -220,6 +221,26 @@ export default function Home() {
               </Select>
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="campus">Campus</Label>
+              <Select
+                value={campus}
+                onValueChange={(value) => setCampus(value)}
+                required
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a campus" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Campus</SelectLabel>
+                    <SelectItem value="UTM">UTM</SelectItem>
+                    <SelectItem value="UTSG">UTSG</SelectItem>
+                    <SelectItem value="UTSC">UTSC</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
               <Label>ICS file</Label>
               <Input
                 type="file"
@@ -227,6 +248,7 @@ export default function Home() {
                 onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
               />
               <Textarea
+                required
                 rows={10}
                 className="max-h-60"
                 placeholder="Or paste ICS content here"
