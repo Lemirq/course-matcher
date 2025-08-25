@@ -56,7 +56,7 @@ export default function Home() {
     <div className="font-sans max-w-3xl mx-auto p-8 flex flex-col gap-8">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-semibold">UofT Course Matcher</h1>
-        <nav className="flex gap-2">
+        <nav className="flex flex-col items-center justify-center sm:flex-row gap-2">
           <Link href="/students">
             <Button variant="outline">
               <Users className="h-4 w-4 mr-2" />
