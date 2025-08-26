@@ -26,12 +26,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(false);
-
+  const domains = [
+    "@utoronto.ca",
+    "@mail.utoronto.ca",
+    "@ecf.utoronto.ca",
+    "@listserv.utoronto.ca",
+    "@cs.toronto.edu",
+    "@utoronto.edu",
+  ];
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     try {
+      if (!domains.includes(email.split("@")[1])) {
+        toast.error("Must be a UofT email");
+      }
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
