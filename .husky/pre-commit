@@ -1,0 +1,13 @@
+# Lint files
+echo "[HUSKY] 🐷 Linting code..."
+bun lint || (echo "❌ ESLint check failed. Fix the issues and try committing again." && exit 1)
+
+# Type check
+echo "[HUSKY] 🥀 Type checking..."
+bun tsc --noEmit || (echo "❌ TypeScript check failed. Fix type errors and try again." && exit 1)
+
+git add . 
+
+
+
+echo "[HUSKY] ✅ Pre-commit checks passed!"

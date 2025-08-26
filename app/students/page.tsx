@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { prettifyYear } from "../utils/prettifyYear";
-
-type Student = { id: string; name: string; email: string; year: string };
+import type { Student } from "@/types";
 
 export default function StudentsPage() {
   const [q, setQ] = useState("");
@@ -52,12 +51,13 @@ export default function StudentsPage() {
         </button>
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <ul className="flex flex-col gap-3">
+      <ul className="gap-3 grid grid-cols-1 md:grid-cols-2">
         {students.map((s) => (
           <li key={s.id} className="border rounded p-3">
             <div className="font-medium">{s.name}</div>
             <div className="text-sm text-gray-400">{s.email}</div>
             <div className="text-sm text-gray-400">{prettifyYear(s.year)}</div>
+            <div className="text-sm text-gray-400">{s.campus}</div>
           </li>
         ))}
       </ul>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/app/lib/supabase";
+import type { Match } from "@/types";
 
 // Return students who share at least one course with the given student
 // GET /api/matches?email=... or ?id=...
@@ -72,13 +73,7 @@ export async function GET(req: NextRequest) {
     if (matchesErr) throw matchesErr;
 
     // Aggregate by student
-    const agg = new Map<
-      string,
-      {
-        student: { id: string; name: string; email: string; year: string };
-        sharedCourses: string[];
-      }
-    >();
+    const agg = new Map<string, Match>();
     const rows = (matches ?? []) as unknown[] as Array<{
       student_id?: unknown;
       course_code?: unknown;

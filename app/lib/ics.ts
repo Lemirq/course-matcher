@@ -1,25 +1,5 @@
 import ical, { VEvent } from "node-ical";
-
-export type ParsedEvent = {
-  uid: string;
-  summary: string;
-  location: string | null;
-  description: string | null;
-  start: string; // ISO
-  end: string; // ISO
-  rrule: string | null;
-  exdates: string[]; // ISO strings
-};
-
-export type ParsedCourse = {
-  courseCode: string; // e.g., CSC108H5
-  section: string | null; // e.g., LEC0106, TUT0101
-};
-
-export type CalendarParseResult = {
-  courses: ParsedCourse[];
-  events: ParsedEvent[];
-};
+import type { CalendarParseResult, ParsedCourse, ParsedEvent } from "@/types";
 
 const COURSE_CODE_RE = /\b([A-Z]{3}\d{3}[HY]\d)\b/;
 

@@ -11,27 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useSearchParams } from "next/navigation";
 import { prettifyYear } from "../utils/prettifyYear";
-
-type Match = {
-  student: { id: string; name: string; email: string; year: string };
-  sharedCourses: string[];
-};
-
-type CourseDetail = {
-  course_code: string;
-  myEvents: {
-    summary: string;
-    location: string | null;
-    start_time: string;
-    end_time: string;
-  }[];
-  otherEvents: {
-    summary: string;
-    location: string | null;
-    start_time: string;
-    end_time: string;
-  }[];
-};
+import type { Match, CourseDetail } from "@/types";
 
 // Component that handles search params (must be wrapped in Suspense)
 function MatchesPageContent() {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/app/lib/supabase";
+import type { CourseDetail } from "@/types";
 
 // GET /api/match-detail?meEmail=...&otherId=...
 // Returns shared courses with their events (start/end/summary/location) for both students
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
       .select("summary, location, start_time, end_time")
       .eq("student_id", otherId);
 
-    let courseMap = shared.map((code) => {
+    let courseMap: CourseDetail[] = shared.map((code) => {
       const mine = (myEvents ?? []).filter((e) =>
         (e.summary as string).includes(code)
       );
@@ -66,8 +67,8 @@ export async function GET(req: NextRequest) {
       );
       return {
         course_code: code,
-        myEvents: mine,
-        otherEvents: theirs,
+        myEvents: mine as unknown as CourseDetail["myEvents"],
+        otherEvents: theirs as unknown as CourseDetail["otherEvents"],
       };
     });
 

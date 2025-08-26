@@ -9,15 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-type ClassGroup = {
-  course_code: string;
-  location: string | null;
-  start_time: string;
-  end_time: string;
-  size: number;
-  students: { id: string; name: string; email: string; year: string }[];
-};
+import type { ClassGroup } from "@/types";
 
 export default function ClassesPage() {
   const [course, setCourse] = useState("");

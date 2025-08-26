@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const supabase = getSupabase();
     let query = supabase
       .from("students")
-      .select("id, name, email, year")
+      .select("id, name, email, year, campus")
       .order("name");
     if (q && q.trim().length > 0) {
       const like = `%${q.trim()}%`;

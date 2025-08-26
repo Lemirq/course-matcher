@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/app/lib/supabase";
+import type { EventWithStudentRow } from "@/types";
 
 // Group students into classes where course code, start/end times, and room match
 // GET /api/classes?course=CSC&minSize=2
@@ -25,19 +26,7 @@ export async function GET(req: NextRequest) {
 
     const COURSE_CODE_RE = /\b([A-Z]{3}\d{3}[HY]\d)\b/;
 
-    type Row = {
-      summary: string | null;
-      location: string | null;
-      start_time: string;
-      end_time: string;
-      students: {
-        id: string;
-        name: string;
-        email: string;
-        year: string;
-        campus: string;
-      } | null;
-    };
+    type Row = EventWithStudentRow;
 
     const groups = new Map<
       string,
