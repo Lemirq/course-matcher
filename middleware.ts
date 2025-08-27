@@ -14,6 +14,10 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // Check for authentication cookie
+  const authCookie = request.cookies.get("site-auth");
+  const isAuthenticated = authCookie?.value === "authenticated";
+
   // Allow the construction page and Next internals/static assets
   const isConstruction = pathname === "/construction";
   const isPublicAsset =
@@ -34,6 +38,12 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/google");
   const isApi = pathname.startsWith("/api/");
 
+  // If user is authenticated, allow access to all pages
+  if (isAuthenticated) {
+    return NextResponse.next();
+  }
+
+  // If not authenticated and trying to access protected content, redirect to construction
   if (!isConstruction && !isPublicAsset && !isApi) {
     const url = request.nextUrl.clone();
     url.pathname = "/construction";
