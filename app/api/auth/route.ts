@@ -6,6 +6,7 @@ export async function POST(request: NextRequest) {
     const { password } = await request.json();
 
     if (!password) {
+      console.log("❌ Auth attempt failed: No password provided");
       return NextResponse.json({ error: "Password is required" }, { status: 400 });
     }
 
@@ -21,7 +22,18 @@ export async function POST(request: NextRequest) {
     // Expected password format: timeString + "vihaan"
     const expectedPassword = `${timeString}vihaan`;
 
+    // Log authentication attempt details
+    console.log("🔐 Authentication attempt:");
+    console.log(`   - UTC Time: ${now.toISOString()}`);
+    console.log(`   - EST Time: ${estTime.toLocaleString("en-US", { timeZone: "America/New_York" })}`);
+    console.log(`   - Formatted Time: ${timeString}`);
+    console.log(`   - Expected Password: "${expectedPassword}"`);
+    console.log(`   - Provided Password: "${password}"`);
+    console.log(`   - Passwords Match: ${password === expectedPassword}`);
+
     if (password === expectedPassword) {
+      console.log("✅ Authentication successful");
+      
       // Set authentication cookie
       const cookieStore = await cookies();
       cookieStore.set("site-auth", "authenticated", {
@@ -34,12 +46,14 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ success: true });
     } else {
+      console.log("❌ Authentication failed: Password mismatch");
       return NextResponse.json(
         { error: "Invalid password" },
         { status: 401 }
       );
     }
   } catch (error) {
+    console.error("💥 Auth endpoint error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
