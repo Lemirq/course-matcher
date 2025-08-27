@@ -70,9 +70,6 @@ export default function ConstructionPage() {
                 {loading ? "Checking..." : "Enter Site"}
               </Button>
             </form>
-            <p className="text-xs text-foreground/60">
-              Hint: Current EST time + vihaan
-            </p>
           </div>
         </div>
       </div>

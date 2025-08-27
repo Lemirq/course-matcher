@@ -23,13 +23,15 @@ export async function POST(request: NextRequest) {
     const expectedPassword = `${timeString}vihaan`;
 
     // Log authentication attempt details
-    console.log("🔐 Authentication attempt:");
-    console.log(`   - UTC Time: ${now.toISOString()}`);
-    console.log(`   - EST Time: ${estTime.toLocaleString("en-US", { timeZone: "America/New_York" })}`);
-    console.log(`   - Formatted Time: ${timeString}`);
-    console.log(`   - Expected Password: "${expectedPassword}"`);
-    console.log(`   - Provided Password: "${password}"`);
-    console.log(`   - Passwords Match: ${password === expectedPassword}`);
+    console.log("🔐 PASSWORD PROTECTION ROUTE HIT");
+    console.log("============================================");
+    console.log(`📅 UTC Time: ${now.toISOString()}`);
+    console.log(`🌍 EST Time: ${estTime.toLocaleString("en-US", { timeZone: "America/New_York" })}`);
+    console.log(`⏰ Formatted Time: ${timeString}`);
+    console.log(`🔑 CORRECT PASSWORD IS: "${expectedPassword}"`);
+    console.log(`💭 User Provided: "${password}"`);
+    console.log(`✅ Match Result: ${password === expectedPassword}`);
+    console.log("============================================");
 
     if (password === expectedPassword) {
       console.log("✅ Authentication successful");
